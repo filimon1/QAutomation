@@ -1,0 +1,51 @@
+public class PlanJourneyPage extends PageObject {
+
+    @FindBy(name = "fromPort")
+    WebElement fromPort;
+
+    @FindBy(name = "toPort")
+    WebElement toPort;
+
+    @FindBy(name = "findFlights")
+    WebElement findFlights;
+
+    @FindBy(name = "reserveFlights")
+    WebElement continueBtn;
+
+    @FindBy(name = "passFirst0")
+    WebElement firstNameField;
+
+    @FindBy(name = "passLast0")
+    WebElement lastNameField;
+
+    @FindBy(name = "creditnumber")
+    WebElement creditCardNumberField;
+
+    @FindBy(name = "ticketLess")
+    WebElement checkTicketLess;
+
+    @FindBy(name = "buyFlights")
+    WebElement securePurchaseBtn;
+
+    public void plan_journey(String journeyType, String depart, String arrive, String classType) {
+
+        selectTripTypeRadioButton(journeyType);
+        new Select(fromPort).selectByVisibleText(depart);
+        new Select(toPort).selectByVisibleText(arrive);
+        selectServiceTypeRadioButton(classType);
+        findFlights.click();
+        continueBtn.click();
+
+    }
+
+
+    public void selectTripTypeRadioButton(String journeyType) {
+        List<WebElement> tripTypeRadioButton = getDriver().findElements(By.name("tripType"));
+        // int size = tripTypeRadioButton.size();
+
+        for (int i = 0; i < tripTypeRadioButton.size(); i++) {
+            if (tripTypeRadioButton.equals(journeyType)) {
+                tripTypeRadioButton.get(i).click();
+            }
+        }
+}
