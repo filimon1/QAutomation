@@ -1,0 +1,337 @@
+#region Browser Automation Methods
+        private void setWebDriver(int browserId)
+        {
+            ChromeOptions options = new ChromeOptions();
+            options.AddArgument("--start-maximized");
+            switch (browserId)
+            { 
+                case (int)Browser.GC:
+                    driver = new ChromeDriver(options);
+                    break;
+                case (int)Browser.FF:
+                    driver = new FirefoxDriver();
+                    driver.Manage().Window.Maximize();
+                    break;
+                case (int)Browser.IE:
+                    driver = new InternetExplorerDriver();
+                    driver.Manage().Window.Maximize();
+                    break;
+                case (int)Browser.ME:
+                    driver = new EdgeDriver();
+                    driver.Manage().Window.Maximize();
+                    break;
+                default:
+                    driver = new ChromeDriver(options);
+                    break;
+            }
+            driver.Url = "https://www.winflexweb.com/";
+            webDriverWait(0, 0, 5);
+        }
+        
+        private void webDriverWait(int hr, int min, int s)
+        {
+            try
+            {
+                driver.Manage().Timeouts().ImplicitWait = new TimeSpan(hr, min, s);
+            }
+            catch (Exception)
+            {
+                throw new Exception("Browser Navigation Exception: Driver Wait Exception");
+            }
+        }
+        
+        private void sendKeystoTextBox(string element, string value, string error, int lookupType)
+        {
+            IWebElement textBox = null;
+            try
+            {
+                switch (lookupType)
+                {
+                    case (int)ElementLookup.Id:
+                        textBox = driver.FindElement(By.Id(element));
+                        break;
+                    case (int)ElementLookup.XPath:
+                        textBox = driver.FindElement(By.XPath(element));
+                        break;
+                    case (int)ElementLookup.Name:
+                        textBox = driver.FindElement(By.Name(element));
+                        break;
+                    default:
+                        break;
+                }
+                if (textBox != null)
+                {
+                    textBox.Clear();
+                    textBox.SendKeys(value);
+                }
+            }
+            catch (NoSuchElementException)
+            {
+                string errorMessage = string.IsNullOrEmpty(error) ? "Textbox writing error" : error;
+                throw new Exception("Browser Navigation Exception: " + errorMessage);
+            }
+        }
+
+        private void selectListOption(string list, string value, string error, int lookupType)
+        {
+            IWebElement listBox = null;
+            try
+            {
+                switch (lookupType)
+                {
+                    case (int)ElementLookup.Id:
+                        listBox = driver.FindElement(By.Id(list));
+                        break;
+                    case (int)ElementLookup.XPath:
+                        listBox = driver.FindElement(By.XPath(list));
+                        break;
+                    case (int)ElementLookup.Name:
+                        listBox = driver.FindElement(By.Name(list));
+                        break;
+                    default:
+                        break;
+                }
+                if (listBox != null)
+                {
+                    SelectElement listOption = new SelectElement(listBox);
+                    listOption.SelectByValue(value);
+                }
+            }
+            catch (NoSuchElementException)
+            {
+                string errorMessage = string.IsNullOrEmpty(error) ? "List selection error" : error;
+                throw new Exception("Browser Navigation Exception: " + errorMessage);
+            }
+        }
+
+        private void clickControl(string ctrl, string error, int lookupType, bool waitElement)
+        {
+            IWebElement control = null;
+            try
+            {
+                switch (lookupType)
+                {
+                    case (int)ElementLookup.Id:
+                        control = waitElement ? wait.Until(ExpectedConditions.ElementToBeClickable(By.Id(ctrl))) : driver.FindElement(By.Id(ctrl));
+                        break;
+                    case (int)ElementLookup.XPath:
+                        control = waitElement ? wait.Until(ExpectedConditions.ElementToBeClickable(By.XPath(ctrl))) : driver.FindElement(By.XPath(ctrl));
+                        break;
+                    case (int)ElementLookup.Name:
+                        control = waitElement ? wait.Until(ExpectedConditions.ElementToBeClickable(By.Name(ctrl))) : driver.FindElement(By.Name(ctrl));
+                        break;
+                    default:
+                        break;
+                }
+                if (control != null)
+                    control.Click();
+            }
+            catch (WebDriverTimeoutException)
+            {
+                string errorMessage = string.IsNullOrEmpty(error) ? "Timeout error" : error;
+                throw new Exception("Browser Navigation Exception: " + errorMessage);
+            }
+            catch (NoSuchElementException)
+            {
+                string errorMessage = string.IsNullOrEmpty(error) ? "Control click error" : error;
+                throw new Exception("Browser Navigation Exception: " + errorMessage);
+            }   
+        }
+
+        private IWebElement waitForElementVisible(string element, string error, int lookupType)
+        {
+            IWebElement webElement = null;
+            try
+            {
+                switch (lookupType)
+                {
+                    case (int)ElementLookup.Id:
+                        webElement = wait.Until(ExpectedConditions.ElementIsVisible(By.Id(element)));
+                        break;
+                    case (int)ElementLookup.XPath:
+                        webElement = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(element)));
+                        break;
+                    case (int)ElementLookup.Name:
+                        webElement = wait.Until(ExpectedConditions.ElementIsVisible(By.Name(element)));
+                        break;
+                    default:
+                        break;
+                }
+                return webElement;
+            }
+            catch (WebDriverTimeoutException)
+            {
+                string errorMessage = string.IsNullOrEmpty(error) ? "Timeout error" : error;
+                throw new Exception("Browser Navigation Exception: " + errorMessage);
+            }
+            catch (NoSuchElementException)
+            {
+                string errorMessage = string.IsNullOrEmpty(error) ? "Waiting for element visibility error" : error;
+                throw new Exception("Browser Navigation Exception: " + errorMessage);
+            }   
+        }
+        
+        private void closeWebDriver()
+        {
+            driver.Close();
+            driver.Quit();
+        }
+        #endregion
+
+        #region Use Case methods
+        private bool runIllustrations(string user, string pwd, int minInsuredAge, int maxInsuredAge, int retirementAge, int deathAge, string state, List<string> sexSelection, List<string> classSelection, List<string> modeSelection, List<string> amountSelection)
+        {
+            try
+            {
+                //Login to the Site
+                sendKeystoTextBox("tbUsername", user, string.Empty, (int)ElementLookup.Id);
+                sendKeystoTextBox("tbPassword", pwd, string.Empty, (int)ElementLookup.Id);
+                clickControl("btnlogin", string.Empty, (int)ElementLookup.Id, false);
+
+                //Open Illustrations Shortcut
+                clickControl("//*[@id=\"panelShortcuts\"]/div/a[1]", "Invalid Username/Password to MML site", (int)ElementLookup.XPath, true);
+
+                //Start new Case
+                clickControl("//*[@id=\"divWinFlexShortcuts\"]/div[2]/div/a[1]", string.Empty, (int)ElementLookup.XPath, true);
+            }
+            catch (Exception e)
+            {
+                displayError(e.Message);
+                return false;
+            }
+
+            //Run Clients
+            for (int age = minInsuredAge; age <= maxInsuredAge; age++)
+            {
+                for (int sex = 0; sex < sexSelection.Count; sex++)
+                {
+                    string sexStr = sexSelection[sex];
+                    for (int _class = 0; _class < classSelection.Count; _class++)
+                    {
+                        string classStr = classSelection[_class];
+                        for (int mode = 0; mode < modeSelection.Count; mode++)
+                        {
+                            string modeStr = modeSelection[mode];
+                            for (int amnt = 0; amnt < amountSelection.Count; amnt++)
+                            {
+                                string amountStr = amountSelection[amnt].Replace("_", string.Empty);
+                                bool newClient = (age == 25 && sex == 0 && mode == 0 && _class == 0 && amnt == 0);
+                                try
+                                {
+                                    completeProductDialog(newClient);
+                                    downloadClientIllustration(age, retirementAge, deathAge, state, sexStr, classStr, modeStr, amountStr);
+                                }
+                                catch (Exception e)
+                                {
+                                    displayError(e.Message);
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            //close driver
+            closeWebDriver();
+            return true;
+        }
+
+        private void completeProductDialog(bool newClient)
+        {
+            try
+            {
+                waitForElementVisible("dlgProductSelector", string.Empty, (int)ElementLookup.Id);
+                //Select Company:
+                clickControl("//*[@id=\"lbProductSelectorCompanies\"]/tbody/tr[7]/td", string.Empty, (int)ElementLookup.XPath, false);
+                //Select Product:
+                clickControl("//*[@id=\"lbProductSelectorProducts\"]/tbody/tr[1]/td[2]", string.Empty, (int)ElementLookup.XPath, false);
+
+                if (newClient)
+                    clickControl("btnProductSelectorCreate", string.Empty, (int)ElementLookup.Id, false);
+                else
+                    clickControl("btnProductSelectorUpdate", string.Empty, (int)ElementLookup.Id, false);
+            }
+            catch (Exception e)
+            {
+                displayError(e.Message);
+            }
+        }
+
+        private void downloadClientIllustration(int age, int retAge, int deathAge, string state, string sex, string c, string mode, string amount)
+        {
+            try
+            {
+                waitForElementVisible("divQuestionTabs", string.Empty, (int)ElementLookup.Id);
+                selectListOption("//*[@id=\"Insured.Sex|0\"]/div[2]/select", sex, string.Empty, (int)ElementLookup.XPath);
+                sendKeystoTextBox("Insured.Age|0", age.ToString(), string.Empty, (int)ElementLookup.Name);
+                sendKeystoTextBox("MASS.RetirementAge|0", retAge.ToString(), string.Empty, (int)ElementLookup.Name);
+                sendKeystoTextBox("MASS.LESpecifiedAge|0", deathAge.ToString(), string.Empty, (int)ElementLookup.Name);
+                selectListOption("//*[@id=\"Insured.Class|0\"]/div[2]/select", c, string.Empty, (int)ElementLookup.XPath);
+                selectListOption("//*[@id=\"Insured.State|0\"]/div[2]/select", state, string.Empty, (int)ElementLookup.XPath);
+                clickControl("//*[@id=\"QuestionTab1\"]/a", string.Empty, (int)ElementLookup.XPath, true);
+                selectListOption("//*[@id=\"Policy.PremiumMode|0\"]/div[2]/select", mode, string.Empty, (int)ElementLookup.XPath);
+                sendKeystoTextBox("Policy.FaceAmount|0", amount, string.Empty, (int)ElementLookup.Name);
+
+                //Calculate Illustration
+                clickControl("btnClientCalc", string.Empty, (int)ElementLookup.Id, false);
+            }
+            catch (Exception e)
+            {
+                displayError(e.Message);
+            }
+            //wait for calculation to complete
+            IWebElement summary = null;
+            do
+            {
+                try
+                {
+                    summary = waitForElementVisible("quickComparePanelHead", string.Empty, (int)ElementLookup.Id);
+                }
+                catch (Exception)
+                {
+                    summary = null;
+                }
+
+            } while (summary == null);
+
+            try
+            {
+                //Open PDF
+                clickControl("//*[@id=\"cbSendRow_7\"]/td[10]/img", "MML site failed to generate the PDF file", (int)ElementLookup.XPath, false);
+            }
+            catch (Exception e)
+            {
+                displayError(e.Message);
+            }
+            webDriverWait(0, 0, 5);
+
+            //Focus on new window 
+            string mainWindow = driver.CurrentWindowHandle;
+            driver.SwitchTo().Window(driver.WindowHandles.Last());
+            //Download PDF
+            WebClient browser = new WebClient();
+            string filePath = directoryPath + "MassMutual_Leg100WL-" + age.ToString() + "-" + sex + "-" + c + "-" + amount + ".pdf";
+            try
+            {
+                browser.DownloadFile(driver.Url, filePath);
+            }
+            catch (Exception)
+            {
+                displayError("Error downloading PDF file from MML site");
+            }
+            webDriverWait(0, 0, 5);
+            driver.Close();
+            //focus on main window
+            driver.SwitchTo().Window(mainWindow);
+
+            //Prepare for next illustration
+            try
+            {
+                clickControl("//*[@id=\"divResults\"]/div[1]/div[2]/button[7]", string.Empty, (int)ElementLookup.XPath, false);
+            }
+            catch (Exception e)
+            {
+                displayError(e.Message);
+            }
+        }
+        #endregion
