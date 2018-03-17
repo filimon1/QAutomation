@@ -1,0 +1,26 @@
+package cvp.pts.pagetest;
+import cvp.pts.pageclasses.*;
+
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.PageFactory;
+import org.testng.annotations.Test;
+
+public class SignUpPageTest extends BaseClass{
+	
+		
+	@Test
+	public void test() throws InterruptedException {
+		SignUpPageFactory signUp=PageFactory.initElements(driver, SignUpPageFactory.class);
+
+		signUp.typeFirstName("Fil");
+		Thread.sleep(2000);
+		signUp.typeSurName("Tom");
+		Thread.sleep(2000);
+		signUp.typeEmailAddress("fil12tom911");
+		Thread.sleep(2000);
+		signUp.typePassword("tom1209fil1");
+		Thread.sleep(2000);
+
+		
+	}
+}

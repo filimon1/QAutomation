@@ -1,0 +1,159 @@
+package cvp.pts.pageclasses;
+
+import java.util.List;
+
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.Select;
+
+public class SignUpPageFactory {
+
+	WebDriver driver;
+
+	@FindBy(id = "usernamereg-firstName")
+	private WebElement firstName;
+
+	@FindBy(id = "usernamereg-lastName")
+	private WebElement surName;
+
+	@FindBy(id = "usernamereg-yid")
+	private WebElement emailAddress;
+
+	@FindBy(id = "usernamereg-password")
+	private WebElement password;
+
+	@FindBy(name ="shortCountryCode")
+	private static WebElement countryCode;
+
+	@FindBy(id="usernamereg-phone")
+	private WebElement phoneNumber;
+	
+	@FindBy(id="usernamereg-month")
+	private static WebElement birthMonth;
+	
+	@FindBy(id="usernamereg-day")
+	private WebElement dayBorn;
+	
+	@FindBy(id="usernamereg-year")
+	private WebElement yearBorn;
+	
+	@FindBy(id="reg-submit-button")
+	private WebElement continueButton;
+	//reg-gender-list
+	//usernamereg-freeformGender
+	@FindBy(className="reg-gender-list")
+	private static WebElement genderType;
+	
+	
+	public SignUpPageFactory(WebDriver driver) {
+		this.driver = driver;
+		// PageFactory.initElements(driver,this);
+	}
+
+	public void enterFirstName(String name) throws InterruptedException {
+		if (firstName.isDisplayed()) {
+			firstName.sendKeys(name);
+			Thread.sleep(2000);
+		} else {
+			System.out.println("Element not found");
+		}
+	}
+
+	public void enterSurName(String surname) throws InterruptedException {
+		if (surName.isDisplayed()) {
+			surName.sendKeys(surname);
+			Thread.sleep(2000);
+		} else {
+			System.out.println("Element not found");
+		}
+	}
+
+	public void enterEmailAddress(String email) throws InterruptedException {
+		if (emailAddress.isDisplayed()) {
+			emailAddress.sendKeys(email);
+			Thread.sleep(2000);
+		} else {
+			System.out.println("Element not found");
+		}
+	}
+
+	public void enterPassword(String pass) throws InterruptedException {
+		if (password.isDisplayed()) {
+			password.sendKeys(pass);
+			Thread.sleep(2000);
+		} else {
+			System.out.println("Element not found");
+		}
+	}
+
+	public static void selectCountryCode(String code) throws InterruptedException {
+		if(countryCode.isDisplayed()) {	
+		Select selectPurpose = new Select(countryCode);
+			selectPurpose.selectByValue(code);
+			Thread.sleep(2000);
+		} else
+		{
+			System.out.println("countryCode not found");
+		}
+	}
+
+	public void enterPhoneNumber(String numb) {
+		if(phoneNumber.isDisplayed()) {
+			phoneNumber.sendKeys(numb);
+		} else
+		{
+			System.out.println("Element not found");
+		}
+	}
+	
+	public static void selectBirthMonth(String month) throws InterruptedException {
+		if(birthMonth.isDisplayed()) {	
+		Select selectPurpose = new Select(birthMonth);
+			selectPurpose.selectByVisibleText(month);
+			Thread.sleep(2000);
+		} else
+		{
+			System.out.println("Element not found");
+		}
+	}
+	
+	public void enterBornDay(String day) throws InterruptedException {
+		if (dayBorn.isDisplayed()) {
+			dayBorn.sendKeys(day);
+			Thread.sleep(2000);
+		} else {
+			System.out.println("Element not found");
+		}
+	}
+	
+	public void enterBornYear(String year) throws InterruptedException {
+		if (yearBorn.isDisplayed()) {
+			yearBorn.sendKeys(year);
+			Thread.sleep(2000);
+		} else {
+			System.out.println("Element not found");
+		}
+	}
+	
+	public void clickContinueButton() throws InterruptedException {
+		if (continueButton.isDisplayed()) {
+			continueButton.click();
+			Thread.sleep(2000);
+		} else {
+			System.out.println("Element not found");
+		}
+	}	
+
+	public void selectGender(String gender) throws InterruptedException {
+		if(genderType.isDisplayed()) {	
+			Select selectPurpose = new Select(genderType);
+				selectPurpose.selectByVisibleText(gender);
+				Thread.sleep(2000);
+			} else
+			{
+				System.out.println("Element not found");
+			}
+	}
+}

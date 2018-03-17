@@ -1,0 +1,27 @@
+package cvp.pts.pagetest;
+import cvp.pts.pageclasses.*;
+
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.PageFactory;
+import org.testng.annotations.Test;
+
+public class SignUpPageTest extends BaseClass{
+	
+		
+	@Test
+	public void test() throws InterruptedException {
+		SignUpPageFactory signUp=PageFactory.initElements(driver, SignUpPageFactory.class);
+
+		signUp.enterFirstName("Fil");
+		signUp.enterSurName("Tom");
+		signUp.enterEmailAddress("fil110tom92");
+		signUp.enterPassword("whatis2at911");
+		signUp.selectCountryCode("AS");
+		signUp.enterPhoneNumber("2022002");
+		signUp.selectBirthMonth("June");
+		signUp.enterBornDay("2");
+		signUp.enterBornYear("1980");
+//		signUp.selectGender("Female");
+	
+	}
+}

@@ -1,0 +1,42 @@
+package cvp.pts.pagetest;
+import cvp.pts.pageclasses.*;
+
+import java.util.concurrent.TimeUnit;
+
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+public class signUpTest{
+	SignUpPageFactory signUp;
+	WebDriver driver;
+	String baseUrl;
+	
+	@BeforeClass
+	public void setUp() {
+		System.setProperty("webdriver.gecko.driver",
+				"C://Users//filhagos//Downloads//geckodriver-v0.19.1-win64//geckodriver.exe");
+		
+//		System.setProperty("webdriver.chrome.driver", "C://Users//filhagos//Downloads//chromedriver_win32(1)//chromedriver.exe");
+//    	driver = new ChromeDriver();
+		driver=new FirefoxDriver();
+    	
+    	
+    	baseUrl="https://login.yahoo.com/account/create?src=ym&intl=nz&lang=en-NZ&done=https%3A%2F%2Fnz.mail.yahoo.com%2F&specId=yidReg";
+//		signUp= new SignUpPageFactory(driver);
+		
+		// Maxmize the browser's window
+		driver.manage().window().maximize();
+		driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+		driver.get(baseUrl);
+	}
+	@Test
+	public void test() {
+		signUp.typeFirstName("Fil");
+		signUp.typeSurName("Tom");
+		signUp.typeEmailAddress("fil12tom911");
+		signUp.typePassword("tom1209fil1");
+		
+	}
+}

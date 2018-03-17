@@ -1,0 +1,23 @@
+package cvp.pts.pagetest;
+import cvp.pts.pageclasses.*;
+
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.support.PageFactory;
+import org.testng.annotations.Test;
+
+public class signUpTest extends BaseClass{
+	SignUpPageFactory signUp;
+	WebDriver driver;
+	public signUpTest (WebDriver driver) {
+		this.driver=driver;
+		PageFactory.initElements(driver,this);
+	}
+	@Test
+	public void test() {
+		signUp.typeFirstName("Fil");
+		signUp.typeSurName("Tom");
+		signUp.typeEmailAddress("fil12tom911");
+		signUp.typePassword("tom1209fil1");
+		
+	}
+}
