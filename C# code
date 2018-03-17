@@ -1,0 +1,1006 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using OpenQA.Selenium;
+using OpenQA.Selenium.IE;
+using OpenQA.Selenium.Support.UI;
+using OpenQA.Selenium.Support.PageObjects;
+using OpenQA.Selenium.Interactions;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Edge;
+using VaOroTestSuite.PageModels.SystemNavigation;
+
+namespace VaOroTestSuite
+{
+    public class SeleniumLibrary
+    {
+
+        public static IWebDriver driver;
+        WebDriverWait wait;
+      
+        public string URL
+        {
+            get { return driver.Url; }
+        }
+
+        public SeleniumLibrary(int browser)
+        {
+            setWebDriver(browser);
+            wait = new WebDriverWait(driver, new TimeSpan(0, 0, 5));
+        }
+        public static IWebDriver GetWebdriver() {
+
+            return SeleniumLibrary.driver;
+        }
+
+      
+        public void destroyDriver()
+        {
+            driver.Close();
+            driver.Quit();
+        }
+        private void setWebDriver(int browserId)
+        {
+            ChromeOptions options = new ChromeOptions();
+            options.AddArguments("--start-maximized","--ignore-certificate-errors");
+            switch (browserId)
+            {
+                case 1:
+                    driver = new ChromeDriver(options);
+                    break;
+                case 2:
+                    driver = new FirefoxDriver();
+                    driver.Manage().Window.Maximize();
+                    break;
+                case 3:      
+
+                    var caps = new InternetExplorerOptions
+                    {
+                        EnableNativeEvents = true, // just as an example, you don't need this
+                        IgnoreZoomLevel = true
+                    };
+                    driver = new InternetExplorerDriver(caps);
+
+                    driver.Manage().Window.Maximize();
+                    break;
+                case 4:
+                    driver = new EdgeDriver();
+                    driver.Manage().Window.Maximize();
+                    break;
+                default:
+                    driver = new ChromeDriver(options);
+                    break;
+            }
+            driver.Url = DataLibrary.BaseUrl;
+            webDriverWait(0, 0, 5);
+        }
+
+
+         public string currentUrl() {
+             return driver.Url;
+        }
+         public void gotoUrl(string url) { 
+         
+         driver.Url= url;
+         }
+
+
+        public void webDriverWait(int hr, int min, int s)
+        {
+            try
+            {
+                driver.Manage().Timeouts().ImplicitWait = new TimeSpan(hr, min, s);
+            }
+            catch (Exception)
+            {
+                throw new Exception("Browser Navigation Exception: Driver Wait Exception");
+            }
+        }
+
+
+
+        public void clickControl(string ctrl, string error, bool waitElement)
+        {
+            IWebElement control = null;
+            try
+            {
+                control = waitElement ? wait.Until(ExpectedConditions.ElementToBeClickable(By.Name(ctrl))) : driver.FindElement(By.Name(ctrl));
+                if (control != null)
+                    control.Click();
+            }
+            catch (StaleElementReferenceException e)
+            {
+                control = waitElement ? wait.Until(ExpectedConditions.ElementToBeClickable(By.Name(ctrl))) : driver.FindElement(By.Name(ctrl));
+                if (control != null)
+                    control.Click();
+
+            }
+            catch (WebDriverTimeoutException)
+            {
+                string errorMessage = string.IsNullOrEmpty(error) ? "Timeout error" : error;
+                throw new Exception("Browser Navigation Exception: " + errorMessage);
+            }
+            catch (NoSuchElementException)
+            {
+                string errorMessage = string.IsNullOrEmpty(error) ? "Control click error" : error;
+                throw new Exception("Browser Navigation Exception: " + errorMessage);
+            }
+        }
+
+
+
+        public void closeWebDriver()
+        {
+            closeWindow();
+            driver.Quit();
+        }
+
+        public void closeWindow(){
+            driver.Close();
+        }
+
+        public void swicthToWindow(string window)
+        {
+            driver.SwitchTo().Window(window);
+        }
+
+        public void EnterTextInTOTextBox( IWebElement textBox, string Value)
+        {
+            
+            if (textBox != null)
+            {
+                textBox.Clear();
+                textBox.SendKeys(Value);
+            }
+           
+
+        }
+
+        public bool  isIEbrowser()
+        {
+            return driver.GetType().FullName.Contains("Explorer");
+         }
+
+        public void enterText(string elem, int Using, string value)
+        {
+            IWebElement element =getIwebElement(elem,Using);
+            bool actionPerformed = true;
+            try
+            {
+                EnterTextInTOTextBox(element, value);
+            }
+            catch (StaleElementReferenceException e)
+            {
+                element = getIwebElement(elem, Using);
+                EnterTextInTOTextBox(element, value);
+            }
+
+            catch (Exception e)
+            {
+                logError(e.ToString(), (int)WebTools.error.DataEntry);
+                actionPerformed = false;
+            }
+            if (actionPerformed)
+                Console.WriteLine("SUCCESSFULLY ENTERED DATA: " + value + " into " + element);
+        }
+
+
+
+
+
+        public void logError(string element, int type) {
+
+            switch (type) { 
+                case ((int) WebTools.error.DataEntry):
+                Console.WriteLine("TEST ERROR: Could NOT enter Data into " + element +"  ::"+WebTools.error.DataEntry+" : ERROR ");
+                break;
+                case ((int)WebTools.error.DataSelection):
+                Console.WriteLine("TEST ERROR: Could NOT select " + element +"  ::"+WebTools.error.DataSelection+" : ERROR ");
+                break;
+                case ((int)WebTools.error.DataExtraction):
+                Console.WriteLine("TEST ERROR: Could NOT Extract Data from" + element +"  ::"+WebTools.error.DataExtraction+" : ERROR ");
+                break;
+                case ((int)WebTools.error.Hover):
+                Console.WriteLine("TEST ERROR: Could NOT Hover on " + element +"  ::"+WebTools.error.Hover+" : ERROR ");
+                break;
+                default:
+                Console.WriteLine("TEST ERROR: FAILED AT: "+ element);
+                break;
+            }
+        }
+
+        public string getTextFromIwebElement(IWebElement element)
+        {
+          
+            if (object.Equals(null, element))
+                return string.Empty;
+            if (element.Text == string.Empty)
+                return element.GetAttribute("innerHTML");
+            return element.Text;
+
+        }
+
+      
+
+        public string getText(String element, int selector)
+        {
+
+            IWebElement IwebElement;
+            bool actionPerformed = true;
+            string holder = string.Empty;
+            try
+            {
+               IwebElement = getIwebElement(element, selector);
+               holder = getTextFromIwebElement(IwebElement);
+
+            }
+            catch (StaleElementReferenceException e)
+            {
+                IwebElement = getIwebElement(element, selector);
+                holder = getTextFromIwebElement(IwebElement);
+
+            }
+            catch (NoSuchElementException e)
+            {
+                logError(element, (int)WebTools.error.DataExtraction);
+                  
+            }
+           
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+                actionPerformed = false;
+            }
+
+            if (actionPerformed)
+                Console.WriteLine("SUCCESSFULLY FROM: " + element + " DATA VALUE: "+ holder);
+
+            return holder;
+        }
+
+
+        
+
+
+        public void click(string elem, int Using)
+        {
+          IWebElement element = getIwebElement(elem, Using);
+          wait = new WebDriverWait(driver, new TimeSpan(0, 0, 5));
+          bool actionPerformed = true;
+          try
+          {
+              (element).Click();
+          }
+          catch (StaleElementReferenceException e)
+          {
+              element = getIwebElement(elem, Using);
+              element.Click();
+          }
+
+          catch (Exception e)
+          {
+              logError(e.ToString() + "  "+e.ToString(), (int)WebTools.error.DataSelection);
+              actionPerformed = false;
+          }
+
+           if(actionPerformed)
+             Console.WriteLine("SUCCESSFULLY SELECTED ELEMENT: "+ elem);
+        }
+
+
+
+        public void selectDroppedDownIndex(IWebElement element, int id)
+        {
+            bool actionPerformed = true;
+            SelectElement clickThisitem = new SelectElement(element);
+            wait.Until(ExpectedConditions.ElementToBeClickable(element));
+            try
+            {
+                clickThisitem.SelectByValue(Convert.ToString(id));
+            }
+            catch (StaleElementReferenceException)
+            {
+
+                clickThisitem.SelectByValue(Convert.ToString(id));
+            }
+            catch (Exception e)
+            {
+                logError(element.ToString(), (int)WebTools.error.DataSelection);
+                actionPerformed = false;
+            }
+            if (actionPerformed)
+                Console.WriteLine("SUCCESSFULLY SELECTED ELEMENT: " + element.ToString());
+        
+        }
+
+
+
+
+
+
+
+        public void drpdownSelectByIndex(string elem, int Using, int index)
+        {
+            bool actionPerformed = true;
+            IWebElement element = getIwebElement(elem, Using);
+            wait = new WebDriverWait(driver, new TimeSpan(0, 0, 5));
+
+            try
+            {
+                selectDroppedDownIndex(element, index);
+
+            }
+            catch (StaleElementReferenceException)
+            {
+                element = getIwebElement(elem, Using);
+                selectDroppedDownIndex(element, index);
+            }
+            catch (Exception e)
+            {
+                logError(element.ToString(), (int)WebTools.error.DataSelection);
+                actionPerformed = false;
+            }
+            if (actionPerformed)
+                Console.WriteLine("SUCCESSFULLY SELECTED ELEMENT: " + elem);
+        }
+
+
+
+       public void selectDropDown(string elem, int Using , string value)
+        {
+            IWebElement element = getIwebElement(elem, Using);
+            bool actionPerformed = true;
+            try
+            {
+                new SelectElement(element).SelectByText(value);
+            }
+            catch (StaleElementReferenceException e)
+            {
+
+                element = getIwebElement(elem, Using);
+                new SelectElement(element).SelectByText(value);
+
+            }
+            catch (Exception e)
+            {
+                logError(e.ToString(), (int)WebTools.error.DataSelection);
+                actionPerformed = false;
+            }
+                         
+            if(actionPerformed)
+                Console.WriteLine("SUCCESSFULLY SELECTED ELEMENT: "+ elem);
+        }
+
+       public void selectDropDownByIndex(string elem, int Using, int index)
+       {
+           IWebElement element = getIwebElement(elem, Using);
+           wait = new WebDriverWait(driver, new TimeSpan(0, 0, 5));
+           bool actionPerformed = true;
+           SelectElement clickThisitem = new SelectElement(element);
+           wait.Until(ExpectedConditions.ElementToBeClickable(element));
+
+           try
+           {
+               clickThisitem.SelectByIndex(index);
+           }
+           catch (StaleElementReferenceException)
+           {
+               clickThisitem.SelectByIndex(index);
+           }
+           catch (Exception e)
+           {
+               logError(element.ToString(), (int)WebTools.error.DataSelection);
+               actionPerformed = false;
+           }
+           if (actionPerformed)
+               Console.WriteLine("SUCCESSFULLY SELECTED ELEMENT: " + element.ToString());
+
+
+
+       }
+
+       public bool checkTextinDropDown(string elem, int Using, string value)
+       {
+           IWebElement element = getIwebElement(elem, Using);
+           bool  isExists= false;
+           try
+           {
+               SelectElement SelectdrpContacts = new SelectElement(element);
+               List<IWebElement> lstElement = SelectdrpContacts.Options.ToList();
+               for (int i = 1; i < lstElement.Count(); i++)
+               {
+                   if (lstElement[i].Text.Equals(value))
+                   {
+                       isExists = true;
+                       break;
+                   }
+               }
+
+           }  
+           catch (Exception e)
+           {
+               logError(element.ToString(), (int)WebTools.error.DataSelection);              
+           }
+           return isExists;
+       }
+
+
+
+        public string getDropdownText(IWebElement element) {
+
+            SelectElement newSeElement = new SelectElement(element);
+            return newSeElement.SelectedOption.Text;
+        }
+
+
+
+        public string getDropDownSelectedText(string elem,int Using)
+        {
+            IWebElement element = getIwebElement(elem, Using);
+            bool actionPerformed = true;
+            string strSelectedText = "";
+            try
+            {
+            strSelectedText=  getDropdownText(element);
+            }
+            catch (StaleElementReferenceException e)
+            {
+                element = getIwebElement(elem, Using);
+               strSelectedText= getDropdownText(element);
+            }
+            catch (Exception e)
+            {
+
+                logError(e.ToString(), (int)WebTools.error.DataSelection);
+                actionPerformed = false;
+            }
+
+            if (actionPerformed)
+                Console.WriteLine("SUCCESSFULLY SELECTED ELEMENT: " + elem);
+            return strSelectedText;
+        }
+
+       
+
+        public int getDropDownCount(string elem, int Using)
+        {
+            IWebElement element = getIwebElement(elem,Using);
+            bool actionPerformed = true;
+            int ElementCount = 0;
+            try
+            {
+                SelectElement SelectdrpContacts = new SelectElement(element);
+                ElementCount = SelectdrpContacts.Options.Count();
+            }
+            catch (StaleElementReferenceException)
+            {
+                element = getIwebElement(elem, Using);
+                return new SelectElement(element).Options.Count;
+
+            }
+
+            catch (Exception e)
+            {
+                logError(element.ToString(), (int)WebTools.error.DataSelection);
+                actionPerformed = false;
+            }
+
+            if (actionPerformed)
+                Console.WriteLine("SUCCESSFULLY SELECTED ELEMENT COUNT: " + elem);
+            return ElementCount;
+        }
+
+        public void goToElement(string element, int Using)
+        {
+
+            goToElement(getIwebElement(element, Using));
+
+        }
+
+
+        public void goToElement(IWebElement element)
+        {
+          
+            bool actionPerformed = true;
+            try
+            {
+                
+                Actions actions = new Actions(driver);
+                actions.MoveToElement(element);
+                actions.Perform();
+            }
+            catch (Exception e)
+            {
+                logError(element.ToString(), (int)WebTools.error.DataSelection);
+                actionPerformed = false;
+            }
+            if (actionPerformed)
+                Console.WriteLine("SUCCESSFULLY MOVED TO ELEMENT: " + element);
+        }
+
+
+
+
+        public bool tableItarator(IWebElement Table, string Data)
+        {
+            Boolean flag = false;
+            
+            IList<IWebElement> rows_table = Table.FindElements(By.TagName("tr"));
+           for (int i = 1; i < rows_table.Count(); i++)
+            {
+                
+                IWebElement Columns_row = rows_table[i];
+                if (Columns_row.Text.Contains(Data))
+                {
+                    flag = true; 
+                    break;
+                }
+            }
+
+                   
+            return flag;
+
+
+        }
+
+
+
+        public Boolean isDataInTable(string elem, int Using, String Data)
+        {
+
+            IWebElement element = getIwebElement(elem, Using);
+
+            bool actionPerformed = true; Boolean flag = false;
+            try
+            {
+
+                flag = tableItarator(element, Data);
+            }
+            catch (StaleElementReferenceException e)
+            {
+                element = getIwebElement(elem, Using);
+
+                flag = tableItarator(element, Data);
+            }
+
+            catch (Exception e)
+            {
+                logError(e.ToString(), (int)WebTools.error.DataSelection);
+                actionPerformed = false;
+            }
+
+            return flag;
+        }
+
+        public int getDataRowNumber(string elem, int Using, string Data)
+        {
+            int rowNum = 0;
+            IWebElement Table = getIwebElement(elem, Using);
+            IList<IWebElement> rows_table = Table.FindElements(By.TagName("tr"));
+            for (int i = 1; i < rows_table.Count(); i++)
+            {
+                IWebElement Columns_row = rows_table[i];
+                if (Columns_row.Text.Contains(Data))
+                {
+                    rowNum = i;
+                    break;
+                }
+            }
+            return rowNum;            
+        }
+
+
+       
+        
+        public IWebElement getIwebElement(string element, int Using)
+        {
+            
+            switch (Using)
+            {
+                case (int)use.Id:
+                     return driver.FindElement(By.Id(element));
+                case (int)use.name:
+                    return driver.FindElement(By.Name(element));
+                case (int)use.xpath:
+                    return driver.FindElement(By.XPath(element));
+                case (int)use._class:
+                    return driver.FindElement(By.ClassName(element));
+                default: return null;
+            }
+           
+        }
+
+
+        public IWebElement getIwebElement(By element)
+        {
+            if (object.Equals(null, element))
+                return null;
+            try
+            {
+                return driver.FindElement(element);
+            }
+            catch(StaleElementReferenceException) {
+
+                return driver.FindElement(element);
+            
+            
+            
+            }
+        }
+
+
+
+
+        public int tableCount(IWebElement element)
+        {
+            int rowCount = -1;
+            IList<IWebElement> rows_table = element.FindElements(By.TagName("tr"));
+            if (rows_table != null)
+                rowCount = rows_table.Count();
+
+            return rowCount;
+        
+        }
+
+
+
+        public int getTableRowCount(string elm ,  int Using)
+        {
+            IWebElement element = getIwebElement(elm, Using);
+            int rowCount = 0;
+
+            try
+            {
+                rowCount = tableCount(element);
+            }
+            catch (StaleElementReferenceException e)
+            {
+                element = getIwebElement(elm, Using);
+                rowCount = tableCount(element);
+
+            }
+            catch (NoSuchElementException e) {
+                Console.WriteLine(elm + "\t" + e.StackTrace);
+                int invalidSelection = -1;
+                return invalidSelection;
+            
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(elm + "\t" + e.StackTrace);
+
+            }
+
+            return rowCount;
+        }
+
+
+
+
+        public void scrollToTop()
+        {          
+            (driver as IJavaScriptExecutor).ExecuteScript("scroll(0, 0);"); 
+        }
+
+       
+
+        public void DomEnterValue_Name(string Element, string index, string text)
+        {
+            string script = "document.getElementsByName('" + Element + "').[" + index + "].value = '" + text + "';";
+
+            (driver as IJavaScriptExecutor).ExecuteScript(
+                   script);
+        }
+
+
+        public void DomClick(string Element, int? Using, int? index)
+        {
+            try
+            {
+                if (object.Equals(null, Using) && object.Equals(null, index))
+                    (driver as IJavaScriptExecutor).ExecuteScript(
+                           "document.getElementById('" + Element + "').click();");
+                if (!object.Equals(null, Using) && !object.Equals(null, index))
+                    switch (Using)
+                    {
+                        case (int)use.Id:
+                            (driver as IJavaScriptExecutor).ExecuteScript(
+                           "var a = document.getElementById('" + Element + "');" +
+                             "a.click();");
+                            break;
+                        case (int)use.name:
+                            (driver as IJavaScriptExecutor).ExecuteScript(
+                           "var a = document.getElementsByName('" + Element + "')[" + index + "];" +
+                           "a.click();");
+                            break;
+                        case (int)use._class:
+                            (driver as IJavaScriptExecutor).ExecuteScript(
+                           "var a = document.getElementsByClassName('" + Element + "')[" + index + "];" +
+                           "a.click();");
+                            break;
+                        case (int)use.xpath:
+                            (driver as IJavaScriptExecutor).ExecuteScript(
+                           "var a = document.getElementById('" + Element + "');" +
+                           "a.submit();");
+                            break;
+
+
+                    }
+                Console.WriteLine("Element:: " + Element + " :: Clicked"); 
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+            }
+
+
+        }
+
+        public void DomCheckBOX(string Element, bool check)
+        {
+            try
+            {
+                if (check)
+                    (driver as IJavaScriptExecutor).ExecuteScript(
+                  " document.getElementById('" + Element + "').checked = true;");
+                else
+                    (driver as IJavaScriptExecutor).ExecuteScript(
+                      " document.getElementById('" + Element + "').checked = false;");
+
+                Console.WriteLine("Element:: " + Element + " :: " + (check?"Checked" :"Not Checked")); 
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+            }
+
+        }
+
+        public void DomEnterValue(string Element, string text, int? Using,int? index)
+        {
+            try
+            {
+
+                if (object.Equals(null, Using))
+                    (driver as IJavaScriptExecutor).ExecuteScript(
+                           "var a = document.getElementById('" + Element + "');" +
+                           "a.value ='" + text + "';");
+                if (!object.Equals(null, Using) && !object.Equals(null, index))
+                    switch (Using)
+                    {
+                        case (int)use.Id:
+                            (driver as IJavaScriptExecutor).ExecuteScript(
+                           "var a = document.getElementById('" + Element + "');" +
+                           "a.value ='" + text + "';");
+                            break;
+                        case (int)use.name:
+                            (driver as IJavaScriptExecutor).ExecuteScript(
+                           "var a = document.getElementsByName('" + Element + "')[" + index + "];" +
+                           "a.value ='" + text + "';");
+                            break;
+                        case (int)use._class:
+                            (driver as IJavaScriptExecutor).ExecuteScript(
+                           "var a = document.getElementsByClassName('" + Element + "')[" + index + "];" +
+                           "a.value ='" + text + "';");
+                            break;
+
+                    }
+                Console.WriteLine("Element:: " + Element + " ::Value Entered: " + text);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+            }
+
+                         
+        }
+
+        
+
+        public string DomGetTextFromTable(string element, string row, string col, int Using)
+        {
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
+            string script = string.Empty;
+            try
+            {
+                switch (Using)
+                {
+                    case (int)use.Id:
+                        script = "document.getElementById('" + element + "').rows[" + row + "].cells[" + col + "].innerHTML;";
+                        break;
+                    case (int)use._class:
+                        script = "document.getElementsByClassName('" + element + "').rows[" + row + "].cells[" + col + "].innerHTML;";
+                        break;
+                    case (int)use.name:
+                        script = "document.getElementsByName('" + element + "').rows[" + row + "].cells[" + col + "].innerHTML;";
+                        break;
+                    default: break;
+
+                }
+                Console.WriteLine("Element:: " + element + ":: Value Captured");
+                return (string)js.ExecuteScript("return " + script);
+               
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+                return script;
+            }
+
+            
+         }
+
+        
+        public string DomGetInnerText(string Element, int? Using, int? index)
+        {
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
+            string script = string.Empty;
+            try
+            {
+                if (object.Equals(null, Using) && object.Equals(null, index))
+                {
+                    script = "document.getElementById('" + Element + "').innerText;";
+                    return (string)js.ExecuteScript("return " + script);                    
+                }
+                if (!object.Equals(null, Using) && !object.Equals(null, index))
+                    switch (Using)
+                    {
+                        case (int)use.Id:
+                            script = "document.getElementById('" + Element + "').innerText;";
+                            return (string)js.ExecuteScript("return " + script);   
+                          
+                        case (int)use.name:
+                            script = "document.getElementsByName('" + Element + "')[" + index + "].innerText;";
+                            return (string)js.ExecuteScript("return " + script);  
+                          
+                        case (int)use._class:
+                            script=" document.getElementsByClassName('" + Element + "')[" + index + "].innerText;" ;                         
+                            return (string)js.ExecuteScript("return " + script); 
+                   }
+                
+            }
+
+           catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);              
+            }
+            return string.Empty;
+         }
+            
+
+        public string DomSelectListboxItem(string Element, int Using, int index)
+        {
+            IJavaScriptExecutor js = (IJavaScriptExecutor)driver;
+            string script = string.Empty;
+            try
+            {              
+                if (!object.Equals(null, Using) && !object.Equals(null, index))
+                {
+                    switch (Using)
+                    {
+                        case (int)use.Id:
+                            script = "document.getElementById('" + Element + "').options[" + index + "].selected = true;";
+                           js.ExecuteScript("return " + script);
+                           break; 
+                        case (int)use.name:
+                            script = "document.getElementByName('" + Element + "').options[" + index + "].selected = true;";
+                            js.ExecuteScript("return " + script);
+                            break; 
+                        case (int)use._class:
+                            script = "document.getElementsByClassName('" + Element + "').options[" + index + "].selected = true;";
+                            js.ExecuteScript("return " + script);
+                            break; 
+                    }                 
+                }
+                return "List Item Selected";
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+                return script;
+            }           
+         }
+
+        public void DomPostBackRequest(string PostBackFunction)
+        {
+            (driver as IJavaScriptExecutor).ExecuteScript(PostBackFunction+";");
+        }
+
+      
+         public void WaitForPageToLoad(string element, int Using)
+         {
+           WaitForPageToLoad(getBy(element, Using));
+         }
+
+
+         public By getBy(string element, int Using)
+         {
+
+             switch (Using)
+             {
+                 case (int)use.Id:
+                     return By.Id(element);
+                 case (int)use.name:
+                     return By.Name(element);
+                 case (int)use.xpath:
+                     return By.XPath(element);
+                 case (int)use._class:
+                     return By.ClassName(element);
+                 default: return null;
+             }
+
+         }
+
+
+
+        public static void WaitForPageToLoad(By elementLocator)
+        {
+            int timeout = 5;
+            try
+            {
+                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeout));
+                var element = driver.FindElement(elementLocator);
+                wait.Until(ExpectedConditions.StalenessOf(element));
+            }
+            catch (StaleElementReferenceException)
+            {
+                timeout = 10;
+                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeout));
+                var element = driver.FindElement(elementLocator);
+
+            }
+           catch (WebDriverTimeoutException) {
+
+                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeout));
+                var element = driver.FindElement(elementLocator);
+            
+            }
+            catch (NoSuchElementException)
+            {
+                Console.WriteLine("Element with locator: '" + elementLocator + "' was not found in current context page.");
+                throw;
+            }
+        }
+
+       
+
+        public void scrollTO(string elem, int Using)
+        {
+
+            scrollTO(getIwebElement(elem, Using));
+        }
+
+
+        public void scrollTO(IWebElement  webElement) 
+        {
+            (driver as IJavaScriptExecutor).ExecuteScript("arguments[0].scrollIntoView();", webElement);
+           
+        }
+
+       
+
+        public enum use
+        {
+            Id = 1,
+            xpath = 2,
+            name = 3,
+            _class=4,
+        }
+       
+    }
+
+    public class WebTools { 
+        public enum error
+        {
+            DataEntry= 1,
+            DataSelection = 2,
+            DataExtraction = 3,
+            Hover =4,    
+        }
+
+       
+    }
+}
