@@ -1,0 +1,84 @@
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Interactions;
+using OpenQA.Selenium.Support.UI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using VaOroTestSuite.CaseManagement;
+using OpenQA.Selenium.Support.PageObjects;
+
+namespace VaOroTestSuite
+{    
+   public class Close_Case_Page
+   {
+
+       public static string IdSideNavBtn { get { return "MainBody_MainContent_lbCloseCase"; } }
+       public static string IdCloseCaseBtnPopup { get { return "MainBody_MainContent_CaseBody_Button2"; } }
+       public static string IdEmailContentTBox { get { return "MainBody_MainContent_CaseBody_closingEmail_Content"; } }
+       public static string IdlblCloseMessage { get { return " MainBody_MainContent_CaseBody_lblCloseMessage"; } }
+         public static string NameCloseCaseBtn { get { return "ctl00$ctl00$ctl00$MainBody$MainContent$CaseBody$btnClose"; } }
+     
+       public static string IdCaseCloseString { get { return "MainBody_MainContent_CaseBody_lblCloseMessage"; } }
+
+       public Close_Case_Page()
+       {
+       }
+
+
+   
+
+       public string CloseCase(SeleniumLibrary SeleniumLibrary)
+       {
+           SeleniumLibrary.WaitForPageToLoad(NameCloseCaseBtn, (int)SeleniumLibrary.use.name);
+           SeleniumLibrary.DomClick(NameCloseCaseBtn, (int)SeleniumLibrary.use.name, 0);
+           SeleniumLibrary.WaitForPageToLoad(IdEmailContentTBox, (int)SeleniumLibrary.use.Id);
+           string temp =  SeleniumLibrary.getText(IdEmailContentTBox, (int)SeleniumLibrary.use.Id);
+           SeleniumLibrary.DomClick(IdCloseCaseBtnPopup, null, null);
+           return temp;
+       }
+
+       public string AccessCloseCaseFromSideNav(SeleniumLibrary SeleniumLibrary)
+       {
+           SeleniumLibrary.DomClick(IdSideNavBtn, null, null);
+           SeleniumLibrary.WaitForPageToLoad(IdSideNavBtn, (int)SeleniumLibrary.use.Id);
+           return SeleniumLibrary.currentUrl();
+
+       }
+
+       public string CheckCloseMessageForExitIinterview(SeleniumLibrary SeleniumLibrary)
+       {
+           return (SeleniumLibrary.getText(IdlblCloseMessage, (int)SeleniumLibrary.use.Id)).Contains(DataLibrary.closingTextForExitInterview).ToString();
+       }
+
+       
+       public string CheckCloseMessageForSiteVisits(SeleniumLibrary SeleniumLibrary)
+       {
+           return (SeleniumLibrary.getText(IdlblCloseMessage, (int)SeleniumLibrary.use.Id)).Contains(DataLibrary.closingTextForSiteVisits).ToString();
+       }
+
+       public string CheckCloseMessageForRC(SeleniumLibrary SeleniumLibrary)
+       {
+           return (SeleniumLibrary.getText(IdlblCloseMessage, (int)SeleniumLibrary.use.Id)).Contains(DataLibrary.closingTextForRC).ToString();
+       }
+
+       public string CheckCloseMessageForRRA(SeleniumLibrary SeleniumLibrary)
+       {
+           return (SeleniumLibrary.getText(IdlblCloseMessage, (int)SeleniumLibrary.use.Id)).Contains(DataLibrary.closingTextForRRA).ToString();
+       }
+
+       public string CheckCloseMessageForRRAPending(SeleniumLibrary SeleniumLibrary)
+       {
+           return (SeleniumLibrary.getText(IdlblCloseMessage, (int)SeleniumLibrary.use.Id)).Contains(DataLibrary.closingTextForRRAPending).ToString();
+       }
+
+       public string getCaseCloseString(SeleniumLibrary SeleniumLibrary)
+       {
+           SeleniumLibrary.WaitForPageToLoad(IdSideNavBtn, (int)SeleniumLibrary.use.Id);
+           return SeleniumLibrary.getText(IdCaseCloseString, (int)SeleniumLibrary.use.Id);
+       }
+   }
+}
