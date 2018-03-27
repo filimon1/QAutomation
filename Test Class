@@ -1,0 +1,189 @@
+using System;
+using System.Text;
+using System.Collections.Generic;
+using System.Threading;
+using VaOroTestSuite.CaseManagement;
+using VaOroTestSuite.PageModels.SystemAccess;
+using NUnit.Framework;
+using NUnit.Framework.Internal;
+namespace VaOroTestSuite
+{
+    [TestFixture]
+    public class CreateCaseBypassSiteVisitFillAndClose         
+    {
+        static SeleniumLibrary SeleniumLibrary;
+        static Dictionary<string, string> PageActionResults;
+        static Login_Page LoginPage;
+        static Case_Contacts_Page CaseContactsPage;        
+        static Onsite_Details_Page OnsiteDetailsPage;
+        static Linked_Cases_Page LinkedCasesPage;
+        static Site_Visit_Page SiteVisitPage;        
+        static ED_Summary_Page EDSummaryPage;
+        
+        public TestExecutionContext TestContext
+        {
+            get;
+            set;
+        }
+       [OneTimeSetUp]
+       public static void TestSetup()
+       {            
+            SeleniumLibrary = new SeleniumLibrary(3);
+            PageActionResults = new Dictionary<string, string>();            
+       }
+       [SetUp]
+       public void SetUp()
+       {
+       }
+        [Test, Order(1)]
+        public void Login()
+        {
+            LoginPage = new Login_Page();
+            int attempt = PageActionResults.Count;
+            PageActionResults.Add(attempt + ":LoginAdmin", LoginPage.LoginAdmin(SeleniumLibrary));
+            NUnit.Framework.Assert.IsTrue(PageActionResults[attempt + ":LoginAdmin"].Equals(DataLibrary.Login_AdminUsername));
+        }
+        [Test, Order(2)]
+        public void CreateCase()
+        {
+            if (LoginPage.ReAttemptLogOn(SeleniumLibrary))
+            {
+                Login();
+            }
+           
+            Create_Case_Page NewCase = new Create_Case_Page();
+            PageActionResults.Add("CreateCase:AccessCaseCreationPage", NewCase.AccessCaseCreationPage(SeleniumLibrary));
+            PageActionResults.Add("CreateCase:FillCase", NewCase.FillCase(SeleniumLibrary));
+            PageActionResults.Add("CreateCase:SaveCaseAsDraft", NewCase.SaveCaseAsDraft(SeleniumLibrary, false));
+            NUnit.Framework.Assert.IsFalse(string.IsNullOrEmpty(PageActionResults["CreateCase:SaveCaseAsDraft"]));
+        }
+        [Test, Order(3)]
+        public void UpdateFacilityContact()
+        {
+             CaseContactsPage = new Case_Contacts_Page();
+             PageActionResults.Add("UpdateFacilityContact:AccessFacilityContactFromOverview", CaseContactsPage.AcesssCaseContactsFromSideNav(SeleniumLibrary));
+             if (CaseContactsPage.SelectAndAddFacilityContact(SeleniumLibrary))
+             {
+                 PageActionResults.Add("UpdateFacilityContact:Assert_FacilityContactAdd", CaseContactsPage.isFacilityContactAdded(SeleniumLibrary));
+                 NUnit.Framework.Assert.IsTrue(PageActionResults["UpdateFacilityContact:Assert_FacilityContactAdd"].Contains(Boolean.TrueString));
+                 PageActionResults.Add("UpdateFacilityContact:SelectAndAddOROContact()", CaseContactsPage.SelectAndAddOROContact(SeleniumLibrary).ToString());
+                 PageActionResults.Add("UpdateFacilityContact:Assert_OROContactAdd()", CaseContactsPage.isOROContactAdded(SeleniumLibrary).ToString());
+             }
+             NUnit.Framework.Assert.IsTrue(PageActionResults["UpdateFacilityContact:Assert_OROContactAdd()"].Contains(Boolean.TrueString));
+         }
+         [Test, Order(4)]
+         public void CheckAttachmentsAddition()
+         {
+             Case_Attachment_Page CaseAttachmentpage = new Case_Attachment_Page();
+             PageActionResults.Add("CheckAttachmentsAddition:AccessAttachmentsFromSideNav()", CaseAttachmentpage.AccessAttachmentsFromSideNav(SeleniumLibrary).ToString());
+             PageActionResults.Add("CheckAttachmentsAddition:AddFinalReportWithoutSiteVisit", CaseAttachmentpage.AddFinalReportWithoutSiteVisit(SeleniumLibrary));
+             NUnit.Framework.Assert.IsTrue(PageActionResults["CheckAttachmentsAddition:AddFinalReportWithoutSiteVisit"].Contains(DataLibrary.AttachmentsUrl));
+         }
+         [Test, Order(5)]
+         public void CheckCaseClosure()
+         {
+             Close_Case_Page CloseCasePage = new Close_Case_Page();
+             PageActionResults.Add("CheckCaseClosure:AccessCloseCaseFromSideNav", CloseCasePage.AccessCloseCaseFromSideNav(SeleniumLibrary));
+             PageActionResults.Add("CheckCaseClosure:CheckCloseMessageForSiteVisits", CloseCasePage.CheckCloseMessageForSiteVisits(SeleniumLibrary));
+             NUnit.Framework.Assert.IsTrue(!string.IsNullOrEmpty(PageActionResults["CheckCaseClosure:CheckCloseMessageForSiteVisits"]));
+         }
+         
+         [Test, Order(6)]
+         public void ByPassSiteVisit()
+         {
+             SiteVisitPage = new Site_Visit_Page();
+             PageActionResults.Add("ByPassSiteVisit:AcesssSiteVisitFromSideNav()", SiteVisitPage.AcesssSiteVisitFromSideNav(SeleniumLibrary));
+             PageActionResults.Add("ByPassSiteVisit:CancelSiteVisit()", SiteVisitPage.CancelSiteVisit(SeleniumLibrary));
+             PageActionResults.Add("ByPassSiteVisit:isSiteVisitCancelledOnCaseOverView()", SiteVisitPage.checkSiteVisitCancelledMessageOnCaseOverView(SeleniumLibrary));
+             NUnit.Framework.Assert.IsTrue(PageActionResults["ByPassSiteVisit:isSiteVisitCancelledOnCaseOverView()"].Contains(Boolean.TrueString));
+         }
+         [Test, Order(7)]
+         public void AccessandUpdateNarrativePage()
+         {
+             Case_Details_Page CaseDetailsPage = new Case_Details_Page();
+             PageActionResults.Add("CaseDetailsPage:AccessNarrativeFromOverview", CaseDetailsPage.AccessNarrativeFromOverview(SeleniumLibrary));
+             PageActionResults.Add("CaseDetailsScenario:FillCaseDetailsNoEIDate", CaseDetailsPage.FillCaseDetails(SeleniumLibrary));
+             PageActionResults.Add("CaseDetailsScenario:isCaseNarrativeSubmitted", CaseDetailsPage.isCaseNarrativeSubmitted(SeleniumLibrary).ToString());
+             PageActionResults.Add("CaseDetailsScenario:ViewCaseNarrativePopup", CaseDetailsPage.ViewCaseNarrativePopup(SeleniumLibrary));
+             PageActionResults.Add("CaseDetailsScenario:UpdateComplianceAgencies", CaseDetailsPage.UpdateComplianceAgencies(SeleniumLibrary));
+             PageActionResults.Add("CaseDetailsScenario:CheckVAFunded", CaseDetailsPage.CheckVAFunded(SeleniumLibrary));
+             PageActionResults.Add("CaseDetailsScenario:IsInterviewDateChecked", CaseDetailsPage.IsInterviewDateChecked(SeleniumLibrary));
+             NUnit.Framework.Assert.IsTrue(PageActionResults["CaseDetailsScenario:IsInterviewDateChecked"].Contains(Boolean.TrueString));
+          }
+         [Test, Order(8)]
+         public void AccessandUpdateLinkedCasesPage()
+         {
+             LinkedCasesPage = new Linked_Cases_Page();
+             PageActionResults.Add("AccessandUpdateLinkedCasesPage:AccessLinkedCaseFromOverView", LinkedCasesPage.AccessLinkedCaseFromSideNav(SeleniumLibrary).ToString());
+             PageActionResults.Add("AccessandUpdateLinkedCasesPage:SearchAndSubmitLinkedCase", LinkedCasesPage.SearchAndSubmitLinkedCase(SeleniumLibrary));
+             NUnit.Framework.Assert.IsTrue(!string.IsNullOrEmpty(PageActionResults["AccessandUpdateLinkedCasesPage:SearchAndSubmitLinkedCase"]));
+         }
+         [Test, Order(9)]
+         public void AccessandUpdateOnsiteDetailsPage()
+         {
+             OnsiteDetailsPage = new Onsite_Details_Page();
+             if (OnsiteDetailsPage.AccesssOnSiteFromSideNav(SeleniumLibrary))
+             {
+                 PageActionResults.Add("AccessandUpdateOnsiteDetailsPage:Assert_OnsiteReviewSubmission", OnsiteDetailsPage.FillOnsiteReviewSubmission(SeleniumLibrary));
+                 NUnit.Framework.Assert.IsTrue(PageActionResults["AccessandUpdateOnsiteDetailsPage:Assert_OnsiteReviewSubmission"].Contains(DataLibrary.ActionPassed));
+             }
+         }
+               
+         [Test, Order(10)]
+         public void UpdateRegConcern()
+         {
+             Regulatory_Concern_Page RCP = new Regulatory_Concern_Page();
+             PageActionResults.Add("UpdateRegConcern:AccesssRegConcernFromSideNav", RCP.AccesssRegConcernFromSideNav(SeleniumLibrary).ToString());
+             PageActionResults.Add("UpdateRegConcern:FillRegConcern", RCP.FillRegConcern(SeleniumLibrary));
+             PageActionResults.Add("UpdateRegConcern:ReviewActionforConcern", RCP.ReviewActionforConcern(SeleniumLibrary).ToString());
+             NUnit.Framework.Assert.IsTrue(PageActionResults["UpdateRegConcern:ReviewActionforConcern"].Contains(Boolean.TrueString));
+         }
+         [Test, Order(11)]
+         public void UpdateRRA()
+         {
+             RRA_Page NewRRA = new RRA_Page();
+             PageActionResults.Add("UpdateRRA:AddRRA", NewRRA.AddRRA(SeleniumLibrary).ToString());
+             PageActionResults.Add("UpdateRRA:CompleteRRA", NewRRA.CompleteRRA(SeleniumLibrary).ToString());
+             NUnit.Framework.Assert.IsTrue(!string.IsNullOrEmpty(PageActionResults["UpdateRRA:CompleteRRA"]));
+         }
+                  
+         [Test, Order(12)]
+         public void AddAttachments()
+         {
+             Case_Attachment_Page CaseAttachmentpage = new Case_Attachment_Page();
+             PageActionResults.Add("AddAttachments:AccessAttachmentsFromSideNav()", CaseAttachmentpage.AccessAttachmentsFromSideNav(SeleniumLibrary).ToString());
+             PageActionResults.Add("UpdateAttachment:AddDraftReport", CaseAttachmentpage.AddDraftReport(SeleniumLibrary));
+             PageActionResults.Add("UpdateAttachment:AddFinalReport", CaseAttachmentpage.AddFinalReport(SeleniumLibrary));
+             NUnit.Framework.Assert.IsTrue(PageActionResults["UpdateAttachment:AddFinalReport"].Contains(Boolean.TrueString));
+         }
+         [Test, Order(13)]
+         public void UpdateEDSummary()
+         {
+             EDSummaryPage = new ED_Summary_Page();
+             PageActionResults.Add("UpdateEDSummary:Case_Overview_Page.AccessCaseOverviewPageFromSideMenu()", EDSummaryPage.AccessEDSFromSideNav(SeleniumLibrary));
+             PageActionResults.Add("UpdateEDSummary:AccessEDSummaryFromOverview()", EDSummaryPage.updateEDSProgress(SeleniumLibrary));
+             NUnit.Framework.Assert.IsTrue(!string.IsNullOrEmpty(PageActionResults["UpdateEDSummary:AccessEDSummaryFromOverview()"]));
+         }      
+         [Test, Order(14)]
+         public void CloseCase()
+         {
+             Close_Case_Page CloseCasePage = new Close_Case_Page();
+             PageActionResults.Add("CloseCase:AccessCloseCaseFromSideNav", CloseCasePage.AccessCloseCaseFromSideNav(SeleniumLibrary));
+             PageActionResults.Add("CloseCase:CloseCase", CloseCasePage.CloseCase(SeleniumLibrary));
+             NUnit.Framework.Assert.IsTrue(!string.IsNullOrEmpty(PageActionResults["CloseCase:CloseCase"]));
+         }
+         [Test, Order(15)]
+         public void PageActionResultss()
+         {
+             foreach (var iterator in PageActionResults)
+             {
+                 Console.WriteLine("Key: {0} Values: {1}", iterator.Key, iterator.Value);
+             }
+         }
+         [TestFixtureTearDown]
+         public static void Teardown()
+         {
+             SeleniumLibrary.destroyDriver();
+         }
+    }
+}
